@@ -1,0 +1,202 @@
+# 测试上下文配置
+# 此文件包含测试用例生成的规范和标准
+
+# 优先级定义规则
+priority_rules:
+  P0:
+    description: "Critical - 核心业务流程"
+    criteria:
+      - 核心业务流程（如订单创建、状态流转）
+      - 涉及数据安全的功能（如登录、权限验证）
+      - 阻塞性问题，影响所有用户
+    coverage_requirement: "100%"
+
+  P1:
+    description: "High - 重要业务功能"
+    criteria:
+      - 重要业务功能（如数据查询、报表生成）
+      - 使用频率高的功能
+      - 故障会影响业务开展
+    coverage_requirement: "≥90%"
+
+  P2:
+    description: "Medium - 辅助功能"
+    criteria:
+      - 辅助功能（如数据导出、系统配置）
+      - 使用频率较低的功能
+      - 故障影响较小
+    coverage_requirement: "≥70%"
+
+  P3:
+    description: "Low - 边缘功能"
+    criteria:
+      - 边缘功能（如界面美化、非核心提示信息）
+      - 可选功能
+      - 故障几乎不影响业务
+    coverage_requirement: "≥50%"
+
+# 测试类型说明
+test_types:
+  functional:
+    name: "功能测试"
+    description: "验证功能是否按需求正常工作"
+    focus: "业务逻辑正确性"
+
+  ui:
+    name: "界面测试"
+    description: "验证UI是否符合设计规范，交互是否友好"
+    focus: "界面元素、交互体验"
+
+  api:
+    name: "接口测试"
+    description: "验证后端接口的输入输出、错误处理"
+    focus: "接口参数、返回值、错误码"
+
+  security:
+    name: "安全测试"
+    description: "验证是否存在安全漏洞"
+    focus: "SQL注入、XSS、CSRF、加密传输"
+
+  performance:
+    name: "性能测试"
+    description: "验证响应时间、并发能力是否达标"
+    focus: "响应时间、吞吐量、并发处理"
+
+  compatibility:
+    name: "兼容性测试"
+    description: "验证在不同浏览器、设备上的表现"
+    focus: "浏览器兼容性、设备兼容性"
+
+  integration:
+    name: "集成测试"
+    description: "验证多个模块或系统的集成"
+    focus: "系统集成、数据流转"
+
+# 测试用例命名规范
+test_case_naming:
+  format: "TC-{需求ID}-{序号}-{测试类型简称}"
+  example: "TC-REQ-LOGIN-001-001-FUNC"
+  type_codes:
+    FUNC: "功能测试"
+    UI: "界面测试"
+    API: "接口测试"
+    SEC: "安全测试"
+    PERF: "性能测试"
+    COMP: "兼容性测试"
+    INT: "集成测试"
+
+# 测试数据设计原则
+test_data_principles:
+  normal_data:
+    description: "正常数据"
+    examples: ["符合业务规则的常规数据"]
+
+  boundary_data:
+    description: "边界数据"
+    examples: ["最大值、最小值、临界值"]
+
+  abnormal_data:
+    description: "异常数据"
+    examples: ["空值、非法字符、超长字符串、特殊字符"]
+
+  security_data:
+    description: "安全测试数据"
+    examples: ["SQL注入字符串、XSS攻击字符串、脚本代码"]
+
+  concurrent_data:
+    description: "并发测试数据"
+    examples: ["相同用户名同时登录、重复提交"]
+
+# 常见测试点检查清单
+common_test_points:
+  input_validation:
+    - "必填字段未填写时的处理"
+    - "字段长度超限时的处理"
+    - "格式不正确时的处理（如邮箱格式、手机号格式）"
+    - "重复数据的处理（如重复用户名）"
+
+  special_characters:
+    - "特殊字符的处理（如单引号、尖括号、分号）"
+    - "SQL注入测试"
+    - "XSS攻击测试"
+    - "CSRF攻击测试"
+
+  security:
+    - "越权访问测试"
+    - "密码加密传输测试"
+    - "Token有效期测试"
+    - "Session管理测试"
+
+  concurrency:
+    - "并发操作测试"
+    - "网络异常时的处理（如接口超时）"
+    - "浏览器刷新、后退的处理"
+    - "快速连续点击的处理"
+
+# 测试用例字段定义（用于Excel输出）
+test_case_fields:
+  - field: "用例ID"
+    description: "测试用例唯一标识"
+    required: true
+    format: "TC-{需求ID}-{序号}-{类型}"
+
+  - field: "用例标题"
+    description: "测试用例简短描述"
+    required: true
+    example: "正确用户名密码登录"
+
+  - field: "需求ID"
+    description: "关联的需求编号"
+    required: true
+    example: "REQ-LOGIN-001"
+
+  - field: "测试类型"
+    description: "测试类型分类"
+    required: true
+    options: ["功能测试", "接口测试", "安全测试", "性能测试", "界面测试", "兼容性测试"]
+
+  - field: "优先级"
+    description: "测试用例优先级"
+    required: true
+    options: ["P0", "P1", "P2", "P3"]
+
+  - field: "前置条件"
+    description: "执行测试前需要满足的条件"
+    required: true
+    example: "用户已注册且状态正常"
+
+  - field: "测试步骤"
+    description: "详细的测试执行步骤"
+    required: true
+    example: "1. 打开登录页面\n2. 输入用户名admin\n3. 输入密码123456\n4. 点击登录按钮"
+
+  - field: "测试数据"
+    description: "测试使用的输入数据"
+    required: false
+    example: "用户名: admin, 密码: 123456"
+
+  - field: "预期结果"
+    description: "预期的测试结果"
+    required: true
+    example: "登录成功，跳转到首页"
+
+  - field: "实际结果"
+    description: "实际测试结果（测试时填写）"
+    required: false
+
+  - field: "测试状态"
+    description: "测试用例执行状态"
+    required: false
+    options: ["待执行", "通过", "失败", "阻塞", "跳过"]
+
+  - field: "备注"
+    description: "其他需要说明的信息"
+    required: false
+    example: "该用例需要先完成用户注册"
+
+# 质量目标
+quality_targets:
+  bug_detection_rate: "≥95%"        # 测试阶段发现的bug比例
+  test_coverage: "≥80%"              # 测试覆盖率目标
+  test_efficiency: "平均每个需求生成10-20个测试用例"
+  case_clarity: "测试步骤清晰，预期结果明确"

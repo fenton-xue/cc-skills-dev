@@ -1,0 +1,8 @@
+# 强制所有文本文件在检入仓库时使用 LF，且在工作区也尽量保持 LF
+* text=auto eol=lf
+
+# 对特定二进制文件禁用换行符转换（防止图片、Excel损坏）
+*.png filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.xlsx binary
+*.xls binary

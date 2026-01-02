@@ -1,0 +1,433 @@
+{
+  "requirement_info": {
+    "source_folder": "requirements/#77879 海运系统添加直达中转字段",
+    "req_doc": "需求文档.md",
+    "table_change_doc": null,
+    "cleaned_date": "2026-01-02",
+    "cleaned_by": "Claude Code Agent"
+  },
+  "system_context": {
+    "system_name": "海运管理系统",
+    "core_business": "主要用来追踪海运订单的物流信息",
+    "upstream_systems": ["OSJ", "B2B", "3PL"],
+    "order_dimensions": {
+      "countries": ["美国", "加拿大", "英国", "德国", "日本"],
+      "types": ["非自发", "自发", "LOCAL"]
+    },
+    "order_status_flow": "待分区→待排船→待确认发船→确认发船中→海运中→已到港→已到仓→空箱待还→完成"
+  },
+  "requirement": {
+    "req_id": "#77879",
+    "title": "海运系统添加直达/中转字段",
+    "type": "功能需求",
+    "priority": "P1",
+    "description": "非自发的订单不区分国别和来源系统，增加航程类型字段（单选下拉：直达、中转）",
+    "module_name": "#77879 海运系统添加直达中转字段",
+    "business_rules": [
+      {
+        "rule_id": "R001",
+        "description": "航程类型字段为必填项",
+        "conditions": ["录入SO", "导入SO"],
+        "expected_outcome": "航程类型未填写时提示：航程类型未填写"
+      },
+      {
+        "rule_id": "R002",
+        "description": "航程类型取值校验",
+        "conditions": ["录入SO", "导入SO"],
+        "expected_outcome": "填写非直达或中转时提示：航程类型请选择直达或中转"
+      },
+      {
+        "rule_id": "R003",
+        "description": "航程类型仅对非自发订单有效",
+        "conditions": ["非自发订单"],
+        "expected_outcome": "正常显示和编辑航程类型"
+      },
+      {
+        "rule_id": "R004",
+        "description": "自发订单不支持航程类型",
+        "conditions": ["自发订单"],
+        "expected_outcome": "提示：自发订单无此字段"
+      },
+      {
+        "rule_id": "R005",
+        "description": "航程类型字段无需回传上游系统",
+        "conditions": ["字段回传"],
+        "expected_outcome": "该字段仅海运系统记录展示"
+      }
+    ],
+    "acceptance_criteria": [
+      "录入SO弹窗中新增航程类型字段，必填",
+      "导入SO弹窗中新增航程类型字段，必填",
+      "订单详情页展示航程类型，可编辑",
+      "订舱结果页支持按航程类型筛选",
+      "海运订单管理支持航程字段的展示、导出、筛选、导入",
+      "自发订单无此字段"
+    ],
+    "related_requirements": []
+  },
+  "database_design": null,
+  "business_functions": [
+    {
+      "function_name": "录入SO",
+      "function_level": "二级模块",
+      "function_priority": "P1",
+      "scenarios": [
+        {
+          "scenario_id": "A001",
+          "scenario_name": "录入SO - 航程类型字段显示",
+          "priority": "P1",
+          "description": "验证录入SO弹窗中航程类型字段的显示和位置",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "对于处于待订舱/订舱状态的订单，点击录入SO",
+              "expected_result": "录入SO弹窗中，新增航程类型字段，位于船公司和船名航次之间，有必填符号*，默认文本为请选择"
+            },
+            {
+              "step_order": 2,
+              "step_description": "查看航程类型字段的选项",
+              "expected_result": "航程类型为单选下拉，取值包括：直达、中转"
+            }
+          ]
+        },
+        {
+          "scenario_id": "A002",
+          "scenario_name": "录入SO - 航程类型必填校验",
+          "priority": "P1",
+          "description": "验证航程类型字段的必填校验",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "在录入SO弹窗中，不填写航程类型，点击确定",
+              "expected_result": "提示：航程类型未填写"
+            },
+            {
+              "step_order": 2,
+              "step_description": "在录入SO弹窗中，填写非直达或中转的值，点击确定",
+              "expected_result": "提示：航程类型请选择直达或中转"
+            }
+          ]
+        },
+        {
+          "scenario_id": "A003",
+          "scenario_name": "录入SO - 正常录入航程类型",
+          "priority": "P1",
+          "description": "验证正常填写航程类型并保存",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "对于非自发订单，在录入SO弹窗中选择航程类型为直达",
+              "expected_result": "订单成功保存，航程类型正常落库，操作日志记录该字段，值从无->直达"
+            },
+            {
+              "step_order": 2,
+              "step_description": "对于非自发订单，在录入SO弹窗中选择航程类型为中转",
+              "expected_result": "订单成功保存，航程类型正常落库，操作日志记录该字段，值从无->中转"
+            }
+          ]
+        },
+        {
+          "scenario_id": "A004",
+          "scenario_name": "录入SO - 操作日志记录",
+          "priority": "P2",
+          "description": "验证航程类型编辑记录操作日志",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "编辑导入航程类型后，查看操作日志",
+              "expected_result": "操作日志中记录了航程类型字段的变更，类型为订单编辑"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "function_name": "导入SO",
+      "function_level": "二级模块",
+      "function_priority": "P1",
+      "scenarios": [
+        {
+          "scenario_id": "B001",
+          "scenario_name": "导入SO - 航程类型字段显示",
+          "priority": "P1",
+          "description": "验证导入SO弹窗中航程类型字段的显示",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "对于处于待订舱/订舱状态的订单，点击导入SO",
+              "expected_result": "导入SO弹窗中，新增航程类型字段，必填，单选下拉，取值为直达、中转"
+            }
+          ]
+        },
+        {
+          "scenario_id": "B002",
+          "scenario_name": "导入SO - 航程类型必填校验",
+          "priority": "P1",
+          "description": "验证导入时航程类型的必填校验",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "在导入SO弹窗中，不填写航程类型，点击确定",
+              "expected_result": "提示：航程类型未填写"
+            },
+            {
+              "step_order": 2,
+              "step_description": "在导入SO弹窗中，填写非直达或中转的值",
+              "expected_result": "提示：航程类型请选择直达或中转"
+            }
+          ]
+        },
+        {
+          "scenario_id": "B003",
+          "scenario_name": "导入SO - 订舱状态校验",
+          "priority": "P1",
+          "description": "验证导入时订舱状态的校验",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "对于订舱状态为待订舱的订单，填写航程类型并导入",
+              "expected_result": "首列报错：订舱状态待订舱，不支持操作"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "function_name": "订舱详情页",
+      "function_level": "二级模块",
+      "function_priority": "P1",
+      "scenarios": [
+        {
+          "scenario_id": "C001",
+          "scenario_name": "订舱详情页 - 航程类型字段展示",
+          "priority": "P1",
+          "description": "验证订舱管理订单详情页中航程类型字段的展示",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "进入海运业务管理->订舱管理的订单详情页",
+              "expected_result": "在海运前模块中，航程类型字段位于海运前的船名航次前面，默认文本为请选择，控件为可修改不可删除"
+            }
+          ]
+        },
+        {
+          "scenario_id": "C002",
+          "scenario_name": "订舱详情页 - 航程类型编辑",
+          "priority": "P1",
+          "description": "验证在订舱详情页编辑航程类型",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "在订舱详情页中，修改航程类型字段",
+              "expected_result": "字段可正常编辑，修改后操作日志记录该字段变更，类型为订单编辑"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "function_name": "订舱结果页",
+      "function_level": "二级模块",
+      "function_priority": "P2",
+      "scenarios": [
+        {
+          "scenario_id": "D001",
+          "scenario_name": "订舱结果页 - 航程类型筛选",
+          "priority": "P2",
+          "description": "验证订舱结果页的航程类型筛选功能",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "在订舱结果页的筛选条件中，选择航程类型为直达",
+              "expected_result": "筛选出航程类型为直达的海运单"
+            },
+            {
+              "step_order": 2,
+              "step_description": "在订舱结果页的筛选条件中，选择航程类型为中转",
+              "expected_result": "筛选出航程类型为中转的海运单"
+            }
+          ]
+        },
+        {
+          "scenario_id": "D002",
+          "scenario_name": "订舱导入模板 - 航程类型字段",
+          "priority": "P2",
+          "description": "验证订舱结果页导入模板中的航程类型字段",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "查看订舱结果页导入模板",
+              "expected_result": "在船名航次前增加航程类型字段，单选下拉，取值为直达、中转，非必填"
+            },
+            {
+              "step_order": 2,
+              "step_description": "导入时填写非直达或中转的值",
+              "expected_result": "提示：航程类型请选择直达或中转"
+            },
+            {
+              "step_order": 3,
+              "step_description": "对于订舱状态为待订舱的订单导入航程类型",
+              "expected_result": "首列报错：订舱状态待订舱（具体订舱状态），不支持操作"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "function_name": "海运订单管理",
+      "function_level": "二级模块",
+      "function_priority": "P1",
+      "scenarios": [
+        {
+          "scenario_id": "E001",
+          "scenario_name": "海运订单详情页 - 航程类型展示",
+          "priority": "P1",
+          "description": "验证海运订单管理订单详情页中航程类型的展示",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "进入订单管理->海运订单管理的订单详情页",
+              "expected_result": "在海运前模块中，航程类型字段位于海运前的船名航次前面，默认显示请选择，控件为可修改不可删除"
+            },
+            {
+              "step_order": 2,
+              "step_description": "查看非自发订单的航程类型字段",
+              "expected_result": "正常显示航程类型值"
+            },
+            {
+              "step_order": 3,
+              "step_description": "查看自发订单的航程类型字段",
+              "expected_result": "显示为空"
+            }
+          ]
+        },
+        {
+          "scenario_id": "E002",
+          "scenario_name": "海运订单详情页 - 航程类型编辑",
+          "priority": "P1",
+          "description": "验证在海运订单详情页编辑航程类型",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "在订单详情页中修改航程类型",
+              "expected_result": "字段可正常编辑，操作日志记录该字段变更，类型为订单更新"
+            }
+          ]
+        },
+        {
+          "scenario_id": "E003",
+          "scenario_name": "海运订单导出 - 航程类型字段",
+          "priority": "P2",
+          "description": "验证海运订单管理导出时包含航程类型字段",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "在海运订单管理导出功能中，查看选择list",
+              "expected_result": "在船名航次前增加航程类型字段"
+            },
+            {
+              "step_order": 2,
+              "step_description": "导出非自发订单数据",
+              "expected_result": "正常回显航程类型值"
+            },
+            {
+              "step_order": 3,
+              "step_description": "导出自发订单数据",
+              "expected_result": "航程类型显示为空"
+            }
+          ]
+        },
+        {
+          "scenario_id": "E004",
+          "scenario_name": "海运订单筛选 - 航程类型筛选",
+          "priority": "P2",
+          "description": "验证海运订单管理的航程类型筛选功能",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "在海运订单管理的筛选条件全量组合中，查看航程类型字段",
+              "expected_result": "在航程类型字段前增加航程类型筛选条件，单选下拉，取值为直达、中转"
+            },
+            {
+              "step_order": 2,
+              "step_description": "选择航程类型为直达进行筛选",
+              "expected_result": "筛选出航程类型为直达的订单"
+            }
+          ]
+        },
+        {
+          "scenario_id": "E005",
+          "scenario_name": "海运订单列表 - 航程类型展示",
+          "priority": "P2",
+          "description": "验证海运订单管理列表中的航程类型字段",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "在海运订单管理的列表字段全量组合中，查看航程类型字段",
+              "expected_result": "在末尾增加航程类型字段，支持用户勾选展示"
+            },
+            {
+              "step_order": 2,
+              "step_description": "勾选航程类型字段后查看列表",
+              "expected_result": "列表中正常显示航程类型值"
+            }
+          ]
+        },
+        {
+          "scenario_id": "E006",
+          "scenario_name": "海运订单导入 - 航程类型字段",
+          "priority": "P1",
+          "description": "验证海运订单导入中的航程类型字段",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "查看海运订单导入模板",
+              "expected_result": "在船名航次前增加航程类型字段"
+            },
+            {
+              "step_order": 2,
+              "step_description": "自发订单导入时填写航程类型",
+              "expected_result": "报错：自发订单无此字段"
+            },
+            {
+              "step_order": 3,
+              "step_description": "在待确认发船状态导入航程类型",
+              "expected_result": "提示：第X行:***（系统订单号）待确认发船不支持导入航程类型"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "function_name": "线上数据运维",
+      "function_level": "二级模块",
+      "function_priority": "P3",
+      "scenarios": [
+        {
+          "scenario_id": "F001",
+          "scenario_name": "线上数据运维 - 历史数据处理",
+          "priority": "P3",
+          "description": "验证线上历史数据的运维规则",
+          "test_steps": [
+            {
+              "step_order": 1,
+              "step_description": "查询实际进港日为25年5月1日之前的订单",
+              "expected_result": "航程类型运维为-"
+            },
+            {
+              "step_order": 2,
+              "step_description": "查询实际进港日>=25年5月1日的海运单且非取消的，海运状态在确认发船中~完成",
+              "expected_result": "拉取线上数据生成Excel，包含系统订单号、集装箱号、海运状态、中转/直达（订单标签有中转的则为中转，其余为直达），提供给业务确认后运维"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_business_rules": 5,
+    "total_functions": 6,
+    "total_scenarios": 15,
+    "total_test_steps": 45
+  }
+}

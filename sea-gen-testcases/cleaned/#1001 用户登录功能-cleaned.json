@@ -1,0 +1,448 @@
+{
+  "requirement_info": {
+    "source_file": "requirements/#1001 用户登录功能.md",
+    "cleaned_date": "2025-01-02T15:00:00Z",
+    "cleaned_by": "Claude Code Agent"
+  },
+  "project_context": {
+    "project_name": "企业级Web管理系统",
+    "project_version": "v2.0",
+    "system_background": "面向中小企业的综合管理平台，提供用户管理、权限控制、业务流程管理等功能。核心业务模块包括用户认证模块（P0级）、权限管理模块（P0级）、业务流程模块（P1级）等。",
+    "technical_architecture": "前后端分离架构，后端使用Spring Boot + MySQL，前端使用Vue.js，接口采用RESTful风格，使用JWT进行身份认证"
+  },
+  "requirements": [
+    {
+      "req_id": "REQ-LOGIN-001",
+      "title": "用户登录功能",
+      "type": "functional",
+      "priority": "high",
+      "description": "系统需要提供用户登录功能，允许已注册用户通过用户名（或手机号/邮箱）和密码登录系统。登录成功后跳转到系统首页，失败时给出明确的错误提示。",
+      "business_rules": [
+        {
+          "rule_id": "BR-LOGIN-001",
+          "description": "正常登录验证",
+          "conditions": [
+            "用户已注册且状态正常（未冻结、未删除）",
+            "输入的用户名和密码匹配"
+          ],
+          "expected_outcome": "登录成功，生成登录会话，跳转到系统首页，显示登录成功的提示信息，记录登录日志"
+        },
+        {
+          "rule_id": "BR-LOGIN-002",
+          "description": "用户名/密码错误",
+          "conditions": [
+            "输入的用户名不存在",
+            "或用户名正确但密码错误"
+          ],
+          "expected_outcome": "登录失败，显示'用户名或密码错误'的提示（不明确说明是用户名还是密码错误，防止暴力破解），记录登录失败日志"
+        },
+        {
+          "rule_id": "BR-LOGIN-003",
+          "description": "密码错误次数限制",
+          "conditions": [
+            "同一用户名连续输入错误密码达到3次"
+          ],
+          "expected_outcome": "账户自动锁定30分钟，显示'账户已锁定，请30分钟后再试'的提示，锁定期间即使输入正确密码也无法登录，30分钟后自动解锁，或管理员手动解锁"
+        },
+        {
+          "rule_id": "BR-LOGIN-004",
+          "description": "账号状态检查",
+          "conditions": [
+            "用户账号已被冻结",
+            "或用户账号已被标记为删除"
+          ],
+          "expected_outcome": "登录失败，显示'账号已被冻结，请联系管理员'的提示（冻结情况）或显示'账号不存在'的提示（删除情况）"
+        },
+        {
+          "rule_id": "BR-LOGIN-005",
+          "description": "记住密码功能",
+          "conditions": [
+            "用户勾选'记住密码'选项",
+            "登录成功"
+          ],
+          "expected_outcome": "在本地存储加密的登录凭证（7天有效期），下次访问自动登录（在有效期内），提供'退出登录'功能清除本地凭证"
+        }
+      ],
+      "test_points": [
+        {
+          "point_id": "TP-LOGIN-001",
+          "description": "使用正确的用户名和密码成功登录",
+          "test_type": "positive",
+          "notes": "验证登录成功后跳转到首页，显示登录成功提示"
+        },
+        {
+          "point_id": "TP-LOGIN-002",
+          "description": "使用手机号和正确的密码登录",
+          "test_type": "positive",
+          "notes": "验证支持手机号作为用户名登录"
+        },
+        {
+          "point_id": "TP-LOGIN-003",
+          "description": "使用邮箱和正确的密码登录",
+          "test_type": "positive",
+          "notes": "验证支持邮箱作为用户名登录"
+        },
+        {
+          "point_id": "TP-LOGIN-004",
+          "description": "输入不存在的用户名登录",
+          "test_type": "negative",
+          "notes": "验证显示'用户名或密码错误'提示，不泄露具体错误"
+        },
+        {
+          "point_id": "TP-LOGIN-005",
+          "description": "输入正确的用户名但错误的密码",
+          "test_type": "negative",
+          "notes": "验证显示'用户名或密码错误'提示，不泄露具体错误"
+        },
+        {
+          "point_id": "TP-LOGIN-006",
+          "description": "连续输入错误密码1次",
+          "test_type": "negative",
+          "notes": "验证账户不会被锁定，允许继续尝试"
+        },
+        {
+          "point_id": "TP-LOGIN-007",
+          "description": "连续输入错误密码2次",
+          "test_type": "boundary",
+          "notes": "验证账户不会被锁定，允许继续尝试"
+        },
+        {
+          "point_id": "TP-LOGIN-008",
+          "description": "连续输入错误密码3次",
+          "test_type": "boundary",
+          "notes": "验证账户被锁定30分钟，显示锁定提示"
+        },
+        {
+          "point_id": "TP-LOGIN-009",
+          "description": "账户锁定后输入正确的用户名和密码",
+          "test_type": "negative",
+          "notes": "验证锁定期间无法登录，即使凭证正确"
+        },
+        {
+          "point_id": "TP-LOGIN-010",
+          "description": "30分钟后使用被锁定的账户登录",
+          "test_type": "positive",
+          "notes": "验证账户自动解锁，可以正常登录"
+        },
+        {
+          "point_id": "TP-LOGIN-011",
+          "description": "使用已冻结的账号登录",
+          "test_type": "negative",
+          "notes": "验证显示'账号已被冻结，请联系管理员'提示"
+        },
+        {
+          "point_id": "TP-LOGIN-012",
+          "description": "使用已删除的账号登录",
+          "test_type": "negative",
+          "notes": "验证显示'账号不存在'提示"
+        },
+        {
+          "point_id": "TP-LOGIN-013",
+          "description": "勾选'记住密码'后登录",
+          "test_type": "positive",
+          "notes": "验证7天有效期内自动登录"
+        },
+        {
+          "point_id": "TP-LOGIN-014",
+          "description": "'记住密码'过期后再次访问",
+          "test_type": "boundary",
+          "notes": "验证凭证过期后需要重新登录"
+        },
+        {
+          "point_id": "TP-LOGIN-015",
+          "description": "用户名字段为空",
+          "test_type": "negative",
+          "notes": "验证提示输入用户名"
+        },
+        {
+          "point_id": "TP-LOGIN-016",
+          "description": "密码字段为空",
+          "test_type": "negative",
+          "notes": "验证提示输入密码"
+        },
+        {
+          "point_id": "TP-LOGIN-017",
+          "description": "用户名输入超长字符（>50位）",
+          "test_type": "boundary",
+          "notes": "验证提示用户名长度超限"
+        },
+        {
+          "point_id": "TP-LOGIN-018",
+          "description": "用户名包含特殊字符（SQL注入测试）",
+          "test_type": "security",
+          "notes": "验证系统正确处理特殊字符，防止SQL注入"
+        },
+        {
+          "point_id": "TP-LOGIN-019",
+          "description": "密码包含单引号和分号（SQL注入测试）",
+          "test_type": "security",
+          "notes": "验证系统正确处理特殊字符，防止SQL注入"
+        },
+        {
+          "point_id": "TP-LOGIN-020",
+          "description": "验证密码传输是否使用HTTPS加密",
+          "test_type": "security",
+          "notes": "使用抓包工具验证密码在传输过程中已加密"
+        },
+        {
+          "point_id": "TP-LOGIN-021",
+          "description": "快速连续点击登录按钮",
+          "test_type": "negative",
+          "notes": "验证系统防止重复提交"
+        },
+        {
+          "point_id": "TP-LOGIN-022",
+          "description": "不同浏览器兼容性测试",
+          "test_type": "compatibility",
+          "notes": "验证在Chrome、Firefox、Safari、Edge最新版本正常工作"
+        },
+        {
+          "point_id": "TP-LOGIN-023",
+          "description": "移动端浏览器兼容性测试",
+          "test_type": "compatibility",
+          "notes": "验证在iOS Safari和Android Chrome正常工作"
+        },
+        {
+          "point_id": "TP-LOGIN-024",
+          "description": "最小屏幕分辨率（320px）适配测试",
+          "test_type": "ui",
+          "notes": "验证移动端小屏幕显示正常"
+        },
+        {
+          "point_id": "TP-LOGIN-025",
+          "description": "登录接口响应时间测试",
+          "test_type": "performance",
+          "notes": "验证接口响应时间 < 500ms"
+        },
+        {
+          "point_id": "TP-LOGIN-026",
+          "description": "100并发用户登录测试",
+          "test_type": "performance",
+          "notes": "验证系统支持100并发登录请求"
+        },
+        {
+          "point_id": "TP-LOGIN-027",
+          "description": "验证'忘记密码'链接可点击",
+          "test_type": "ui",
+          "notes": "验证链接跳转到密码找回页面"
+        },
+        {
+          "point_id": "TP-LOGIN-028",
+          "description": "验证'立即注册'链接可点击",
+          "test_type": "ui",
+          "notes": "验证链接跳转到注册页面"
+        },
+        {
+          "point_id": "TP-LOGIN-029",
+          "description": "点击密码'显示'按钮切换明文/密文",
+          "test_type": "ui",
+          "notes": "验证密码显示/隐藏切换功能正常"
+        },
+        {
+          "point_id": "TP-LOGIN-030",
+          "description": "登录失败3次后增加图形验证码",
+          "test_type": "security",
+          "notes": "验证图形验证码显示且必须输入才能继续"
+        },
+        {
+          "point_id": "TP-LOGIN-031",
+          "description": "验证Token使用JWT格式且有效期为2小时",
+          "test_type": "api",
+          "notes": "解析Token验证格式和过期时间"
+        },
+        {
+          "point_id": "TP-LOGIN-032",
+          "description": "验证登录成功后返回正确的用户信息",
+          "test_type": "api",
+          "notes": "验证返回user_id、username、nickname、role等字段"
+        },
+        {
+          "point_id": "TP-LOGIN-033",
+          "description": "验证登录失败返回错误码401",
+          "test_type": "api",
+          "notes": "验证错误码和错误消息格式正确"
+        },
+        {
+          "point_id": "TP-LOGIN-034",
+          "description": "验证账户锁定返回错误码423",
+          "test_type": "api",
+          "notes": "验证返回锁定截止时间和剩余分钟数"
+        },
+        {
+          "point_id": "TP-LOGIN-035",
+          "description": "验证所有登录操作都被记录到日志",
+          "test_type": "functional",
+          "notes": "检查日志系统记录登录成功和失败的详细信息"
+        },
+        {
+          "point_id": "TP-LOGIN-036",
+          "description": "验证短时间内大量失败尝试触发告警",
+          "test_type": "security",
+          "notes": "模拟异常登录行为，验证告警机制"
+        }
+      ],
+      "acceptance_criteria": [
+        "用户可以使用正确的用户名和密码成功登录",
+        "登录成功后正确跳转到首页",
+        "用户名或密码错误时显示友好的错误提示",
+        "连续3次密码错误后账户被锁定30分钟",
+        "锁定期间无法登录，30分钟后自动解锁",
+        "被冻结的账号无法登录并显示相应提示",
+        "'记住密码'功能正常工作，凭证有效期为7天",
+        "所有登录操作都被记录到日志中",
+        "密码在传输过程中使用HTTPS加密",
+        "密码错误提示不泄露具体是用户名还是密码错误"
+      ],
+      "ui_elements": [
+        {
+          "element_id": "UI-LOGIN-001",
+          "element_name": "用户名输入框",
+          "description": "支持用户名、手机号、邮箱三种格式，字符限制1-50位",
+          "attributes": {
+            "type": "text/input",
+            "max_length": 50,
+            "placeholder": "用户名/手机号/邮箱"
+          }
+        },
+        {
+          "element_id": "UI-LOGIN-002",
+          "element_name": "密码输入框",
+          "description": "密码以•或*显示，提供'显示'按钮切换明文/密文显示",
+          "attributes": {
+            "type": "password",
+            "masking": true,
+            "toggle_visibility": true
+          }
+        },
+        {
+          "element_id": "UI-LOGIN-003",
+          "element_name": "记住密码复选框",
+          "description": "复选框，默认不选中",
+          "attributes": {
+            "type": "checkbox",
+            "default_value": false
+          }
+        },
+        {
+          "element_id": "UI-LOGIN-004",
+          "element_name": "登录按钮",
+          "description": "点击后执行登录操作，登录过程中显示'登录中...'加载状态",
+          "attributes": {
+            "type": "button",
+            "loading_state": true
+          }
+        },
+        {
+          "element_id": "UI-LOGIN-005",
+          "element_name": "忘记密码链接",
+          "description": "链接到密码找回页面",
+          "attributes": {
+            "type": "link",
+            "target": "password-recovery-page"
+          }
+        },
+        {
+          "element_id": "UI-LOGIN-006",
+          "element_name": "立即注册链接",
+          "description": "链接到注册页面",
+          "attributes": {
+            "type": "link",
+            "target": "registration-page"
+          }
+        }
+      ],
+      "api_endpoints": [
+        {
+          "endpoint_id": "API-LOGIN-001",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "description": "用户登录接口",
+          "request_params": {
+            "username": {
+              "type": "string",
+              "description": "用户名/手机号/邮箱",
+              "required": true
+            },
+            "password": {
+              "type": "string",
+              "description": "加密后的密码",
+              "required": true
+            },
+            "remember_me": {
+              "type": "boolean",
+              "description": "是否记住密码",
+              "required": false
+            }
+          },
+          "response_codes": {
+            "200": "登录成功",
+            "401": "用户名或密码错误",
+            "423": "账户已锁定"
+          }
+        }
+      ],
+      "related_requirements": {
+        "prerequisites": ["REQ-REGISTER-001"],
+        "subsequent": ["REQ-LOGOUT-001", "REQ-CHGPWD-001"],
+        "related": ["REQ-ACCOUNT-001"]
+      },
+      "edge_cases": [
+        "网络中断时点击登录按钮",
+        "登录接口超时处理",
+        "浏览器后退/刷新后登录状态保持",
+        "同一账户在多个设备同时登录",
+        "Token过期后继续操作",
+        "本地存储被清除后'记住密码'失效",
+        "图形验证码识别失败或过期"
+      ],
+      "security_requirements": [
+        "密码必须在客户端使用RSA加密后再传输",
+        "接口必须使用HTTPS协议",
+        "登录失败3次后需增加图形验证码验证",
+        "Token使用JWT格式，有效期2小时",
+        "'记住密码'功能的本地存储数据必须加密",
+        "记录所有登录尝试（成功和失败）到安全日志",
+        "检测到异常登录行为（如短时间内大量失败尝试）时触发告警"
+      ],
+      "performance_requirements": [
+        "登录接口响应时间 < 500ms（正常情况）",
+        "支持100并发登录请求",
+        "密码加密/解密耗时 < 100ms"
+      ],
+      "compatibility_requirements": [
+        "支持主流浏览器：Chrome、Firefox、Safari、Edge的最新两个版本",
+        "支持移动端浏览器（iOS Safari、Android Chrome）",
+        "适配屏幕分辨率：最小320px（移动端）"
+      ]
+    }
+  ],
+  "summary": {
+    "total_requirements": 1,
+    "requirement_types": {
+      "functional": 1,
+      "business_rule": 0,
+      "ui": 0,
+      "performance": 0,
+      "security": 0
+    },
+    "total_business_rules": 5,
+    "total_test_points": 36,
+    "total_ui_elements": 6,
+    "total_api_endpoints": 1,
+    "test_point_breakdown": {
+      "positive": 4,
+      "negative": 8,
+      "boundary": 5,
+      "security": 6,
+      "performance": 2,
+      "compatibility": 2,
+      "ui": 5,
+      "api": 4,
+      "functional": 0
+    },
+    "estimated_test_cases": "36-45",
+    "testing_priority_level": "P0",
+    "complexity": "high",
+    "notes": "此需求为核心登录功能，涉及安全、性能、兼容性等多个测试维度，建议重点进行安全测试和边界测试"
+  }
+}
