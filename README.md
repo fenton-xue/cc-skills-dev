@@ -36,7 +36,10 @@ gen-test-case --input "cleaned/#77879 海运系统添加直达中转字段-clean
 │   ├── .claude/
 │   │   ├── skills/           # Skills定义
 │   │   │   ├── clean-requirement/SKILL.md
-│   │   │   └── gen-test-case/SKILL.md
+│   │   │   └── gen-test-case/
+│   │   │       ├── SKILL.md
+│   │   │       └── scripts/
+│   │   │           └── generate_excel.py
 │   │   └── CLAUDE.md         # 海运管理系统背景
 │   ├── database-designs/     # 通用表结构
 │   ├── requirements/         # 需求文档
